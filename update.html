@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>อัปเดตงาน</title>
+  <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:#f0f4f8;min-height:100vh}
+.header{background:#1a3a5c;color:white;padding:18px 20px;display:flex;align-items:center;gap:12px}
+.card{background:white;margin:14px;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.sec-title{font-size:10px;font-weight:700;color:#2d6a9f;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid #e8f0f8}
+.field{margin-bottom:16px}
+label{font-size:12px;color:#555;font-weight:600;display:block;margin-bottom:5px}
+select,input{width:100%;padding:11px 13px;border:1.5px solid #dde3ea;border-radius:9px;font-size:14px;color:#1a1a1a;background:#f8fafc;outline:none;font-family:inherit;-webkit-appearance:none}
+.pri-group{display:flex;gap:7px}
+.pri-btn{flex:1;padding:9px 4px;border:1.5px solid #dde3ea;border-radius:9px;background:#f8fafc;font-size:12px;font-weight:700;cursor:pointer;text-align:center;color:#777}
+.pri-btn.high.active{background:#fff0f0;border-color:#e53e3e;color:#e53e3e}
+.pri-btn.medium.active{background:#fffbea;border-color:#e07b00;color:#e07b00}
+.pri-btn.low.active{background:#f0f7ff;border-color:#2d6a9f;color:#2d6a9f}
+.btn-sub{width:100%;padding:15px;background:#1a3a5c;color:white;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-sub.green{background:#2e7d32}
+.task-item{background:#f8fafc;border:1.5px solid #e8f0f8;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.task-item.sel{border-color:#2d6a9f;background:#f0f7ff}
+.task-item h4{font-size:13px;color:#1a1a1a;margin-bottom:4px}
+.task-item .cat{font-size:11px;color:#888}
+.sta-group{display:flex;flex-direction:column;gap:7px}
+.sta-btn{padding:11px 14px;border:1.5px solid #dde3ea;border-radius:9px;background:#f8fafc;font-size:13px;font-weight:600;cursor:pointer;text-align:left;color:#555}
+.sta-btn.active.todo{background:#e8f5e9;border-color:#2e7d32;color:#2e7d32}
+.sta-btn.active.inp{background:#fffbea;border-color:#e07b00;color:#e07b00}
+.sta-btn.active.done{background:#e3f2fd;border-color:#1565c0;color:#1565c0}
+.sta-btn.active.blk{background:#fff0f0;border-color:#e53e3e;color:#e53e3e}
+.empty{text-align:center;color:#aaa;padding:24px 0;font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:white;padding:12px 22px;border-radius:10px;font-size:13px;display:none;z-index:999}</style>
+</head>
+<body>
+<div class="header">
+  <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px">✅</div>
+  <div><h1 style="font-size:17px;font-weight:700">อัปเดตสถานะงาน</h1><p style="font-size:12px;opacity:0.75;margin-top:2px">Update Task Status</p></div>
+</div>
+<div class="card">
+  <div class="sec-title">เลือกโครงการ</div>
+  <div class="field">
+    <select id="proj" onchange="loadTasks(this.value)">
+      <option value="">— กำลังโหลด... —</option>
+    </select>
+  </div>
+</div>
+<div class="card" id="taskSec" style="display:none">
+  <div class="sec-title">เลือกงานที่ต้องการอัปเดต</div>
+  <div id="taskList"><div class="empty">กำลังโหลด...</div></div>
+</div>
+<div class="card" id="updSec" style="display:none">
+  <div class="sec-title">อัปเดตข้อมูล</div>
+  <input type="hidden" id="selTask">
+  <div class="field"><label>สถานะ</label>
+    <div class="sta-group">
+      <button class="sta-btn todo active" data-sta="To Do">⬜ To Do</button>
+      <button class="sta-btn inp" data-sta="In Progress">🔄 In Progress</button>
+      <button class="sta-btn done" data-sta="Done">✅ Done</button>
+      <button class="sta-btn blk" data-sta="Blocked">🚫 Blocked</button>
+    </div>
+    <input type="hidden" id="sta" value="To Do"></div>
+  <div class="field"><label>Priority</label>
+    <div class="pri-group">
+      <div class="pri-btn high" data-pri="High">🔴 สูง</div>
+      <div class="pri-btn medium active" data-pri="Medium">🟡 กลาง</div>
+      <div class="pri-btn low" data-pri="Low">🔵 ต่ำ</div>
+    </div>
+    <input type="hidden" id="pri" value="Medium"></div>
+  <div class="field"><label>วันส่ง</label><input type="date" id="dl"></div>
+  <div style="margin-top:8px">
+    <button class="btn-sub green" onclick="doUpdate()">✅ บันทึกการอัปเดต</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var SURL='https://script.google.com/macros/s/AKfycbzvLC-DMR6HhHV20_ix3bvUJ4wX_uc2Kk_WN7hi2KZXrRbmKCbQlI0f3D473NiumMLwLw/exec';
+var selProj='';
+var taskData=[];
+liff.init({liffId:"2010357731-KLqJxuzQ"}).catch(function(e){console.log(e);});
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
+function setPri(v){document.getElementById('pri').value=v;document.querySelectorAll('.pri-btn').forEach(function(b){b.classList.remove('active');});var el=document.querySelector('.pri-btn.'+v.toLowerCase());if(el)el.classList.add('active');}
+function setSta(v){document.getElementById('sta').value=v;var map={'To Do':'todo','In Progress':'inp','Done':'done','Blocked':'blk'};document.querySelectorAll('.sta-btn').forEach(function(b){b.classList.remove('active');});var cls=map[v]||'todo';var el=document.querySelector('.sta-btn.'+cls);if(el)el.classList.add('active');}
+document.addEventListener('click',function(e){
+  if(e.target.dataset.pri)setPri(e.target.dataset.pri);
+  if(e.target.dataset.sta)setSta(e.target.dataset.sta);
+  var ti=e.target.closest('.task-item');
+  if(ti){var idx=parseInt(ti.dataset.idx);var t=taskData[idx];if(!t)return;document.querySelectorAll('.task-item').forEach(function(c){c.classList.remove('sel');});ti.classList.add('sel');document.getElementById('selTask').value=t.task;document.getElementById('dl').value=t.deadline||new Date().toISOString().split('T')[0];setSta(t.status||'To Do');setPri(t.priority||'Medium');document.getElementById('updSec').style.display='block';setTimeout(function(){document.getElementById('updSec').scrollIntoView({behavior:'smooth'});},100);}
+});
+fetch(SURL+'?action=getprojects').then(function(r){return r.json();}).then(function(projs){var sel=document.getElementById('proj');sel.innerHTML='';var def=document.createElement('option');def.value='';def.textContent='— เลือกโครงการ —';sel.appendChild(def);projs.forEach(function(p){var o=document.createElement('option');o.value=p.name;o.textContent=p.name+(p.client?' — '+p.client:'');sel.appendChild(o);});}).catch(function(){});
+function loadTasks(proj){selProj=proj;if(!proj){document.getElementById('taskSec').style.display='none';return;}document.getElementById('taskSec').style.display='block';document.getElementById('updSec').style.display='none';var tl=document.getElementById('taskList');tl.innerHTML='<div class="empty">กำลังโหลด...</div>';fetch(SURL+'?action=getactivetasks&project='+encodeURIComponent(proj)).then(function(r){return r.json();}).then(function(tasks){taskData=tasks;if(!tasks.length){tl.innerHTML='<div class="empty">ยังไม่มีงานในโปรเจคนี้ค่ะ</div>';return;}tl.innerHTML='';tasks.forEach(function(t,i){var d=document.createElement('div');d.className='task-item';d.dataset.idx=i;d.innerHTML='<h4>'+t.task+'</h4><div class="cat">'+t.category+' | '+t.status+' | '+t.priority+(t.deadline?' | '+t.deadline:'')+'</div>';tl.appendChild(d);});}).catch(function(){tl.innerHTML='<div class="empty">โหลดไม่ได้ ลองใหม่ค่ะ</div>';});}
+function doUpdate(){var task=document.getElementById('selTask').value;if(!task){toast('กรุณาเลือกงานก่อนค่ะ');return;}var url=SURL+'?action=updatetask'+'&project='+encodeURIComponent(selProj)+'&task='+encodeURIComponent(task)+'&status='+encodeURIComponent(document.getElementById('sta').value)+'&priority='+encodeURIComponent(document.getElementById('pri').value)+'&deadline='+encodeURIComponent(document.getElementById('dl').value);window.location.href=url;}
+</script>
+</body>
+</html>
